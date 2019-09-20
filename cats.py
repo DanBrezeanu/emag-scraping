@@ -1,15 +1,14 @@
 from bs4 import BeautifulSoup
+import requests
 
-
-def get_dict_of_all(driver):
+def get_dict_of_all():
     url = 'https://www.emag.ro/all-departments'
-    driver.get(url)
+    request = requests.get(url)
     root_url = 'https://www.emag.ro'
     prods = {}
     n_prods = 0
 
-    innerHTML = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
-    soup = BeautifulSoup(innerHTML, 'html.parser')
+    soup = BeautifulSoup(request.text, 'html.parser')
 
     departments_tiles = soup.findAll('div', {'id': 'departments-page'})[0].findAll('div', {'id': 'department-expanded'})
     for dept in departments_tiles:
@@ -25,6 +24,6 @@ def get_dict_of_all(driver):
             for elem in elems:
                 anchor = elem.findAll('a')[0]
                 name = anchor.findAll('h5')[0].contents[0].strip()
-                url = root_url + '/'.join(anchor['href'].strip().split('/')[:-1])
+                url = root_url + '/'.join(anchor['href'].strip().split('/')[:-1]) + '/sort-priceasc'
                 prods[tile_name][col_name].append((name, url))
     return prods
