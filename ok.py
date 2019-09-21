@@ -19,7 +19,7 @@ class DbManager:
             raise Exception('Multiple DbManger instances created')
 
     @staticmethod
-    def get_instance():
+    def getInstance():
         if DbManager.__instance is None:
             DbManager()
 
@@ -76,6 +76,15 @@ class DbManager:
         except:
             print()
         print('-' * 50)
+
+        try:
+            results = c.execute('SELECT SUM(products) FROM progress').fetchall()[0]
+            print('{:>30}  {:>5}  {:>6}'.format('Total', ' ', results[0]))
+        except:
+            print('{:>30}  {:>5}  {:>6}'.format('Total', '', 0))
+
+        print('-' * 50)
+
 
     def get_cursor(self):
         return self.conn.cursor()

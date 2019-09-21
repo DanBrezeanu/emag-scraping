@@ -7,7 +7,7 @@ import time
 
 class Worker:
     def __init__(self):
-        self.db = DbManager.get_instance()
+        self.db = DbManager.getInstance()
         self.scraper = WebScraper()
         self.cursor = self.db.get_cursor()
 

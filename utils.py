@@ -19,10 +19,10 @@ class Logger():
             print(query)
 
     def failed_total_number_products(self, *args, status = Status.WARN):
-        print('[{}] Could not get total products for {}. Trying again'.format(', '.join(str(arg) for arg in args)))
+        print('[{}] Could not get total products for {}. Trying again'.format(status.name, ', '.join(str(arg) for arg in args)))
 
     def failed_to_load_products(self, url, status_code, exception, status = Status.ERROR):
-        print('[{}] Could not load products from URL {}.\nStatus code: {}\nException: {}'.format(url, status_code, exception))
+        print('[{}] Could not load products from URL {}.\nStatus code: {}\nException: {}'.format(status.name, url, status_code, exception))
 
 def good_table_name(name):
     final = ''
