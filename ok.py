@@ -2,6 +2,8 @@ import sqlite3
 from utils import Logger
 import multiprocessing
 
+# class ConcurrentDbManager:
+#
 
 class DbManager:
     __instance = None
@@ -17,6 +19,8 @@ class DbManager:
             self.__init_progress()
         else:
             raise Exception('Multiple DbManger instances created')
+
+
 
     @staticmethod
     def getInstance():
@@ -45,15 +49,21 @@ class DbManager:
 
     def create_table(self, table_name):
         try:
+            self.lock.acquire()
             self.conn.cursor().execute(self.create_table_prods_query.format(table_name))
+            self.lock.release()
             self.commit_queries('create_table', table_name)
         except sqlite3.OperationalError as e:
+            self.lock.release()
             self.logger.table_already_exists(table_name)
 
     def execute_query(self, query, cursor, *args, commit = False):
+        self.lock.acquire()
         try:
             cursor.execute(query)
+            self.lock.release()
         except sqlite3.OperationalError as e:
+            self.lock.release()
             self.logger.failed_to_execute(e)
             return
 

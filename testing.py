@@ -53,7 +53,6 @@ class WebScraper:
         while True:
             try:
                 request = requests.get(url + '/c')
-                print('url: ' + url)
                 soup = BeautifulSoup(request.text, 'html.parser')
 
                 total = int(soup.findAll('div', {'class' : 'page-container'})[0]\
@@ -63,6 +62,7 @@ class WebScraper:
                             .findAll('div', recursive = False)[1]\
                             .findAll('p')[0]\
                             .findAll('strong')[1].contents[0])
+                self.logger.total_products(url, total)
                 return total
             except IndexError as e:
                 self.logger.failed_total_number_products(url.split('/')[-2])
@@ -116,14 +116,16 @@ class WebScraper:
 
     def all_prods_in_url(self, base_url):
         page = 1
+        f = open('links.txt', 'a')
 
         while True:
             products = []
             url = base_url + '/p{}/c'.format(page)
-
+            f.write(url+'\n')
             try:
                 request = requests.get(url)
                 if request.url != url and page != 1:
+                    self.logger.finished_products(url)
                     break
 
                 items = self.__find_items(request.text)

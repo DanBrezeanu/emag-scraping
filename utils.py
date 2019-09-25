@@ -24,6 +24,19 @@ class Logger():
     def failed_to_load_products(self, url, status_code, exception, status = Status.ERROR):
         print('[{}] Could not load products from URL {}.\nStatus code: {}\nException: {}'.format(status.name, url, status_code, exception))
 
+    def total_products(self, url, total, status = Status.INFO):
+        print('[{}] Got {} products from {}'.format(status.name, total, url))
+
+    def finished_products(self, url, status = Status.INFO):
+        print('[{}] Finished products at url {}'.format(status.name, url))
+
+    def starting_worker(self, table_name, column_name, status = Status.INFO):
+        print('[{}] Starting worker for {}, {}'.format(status.name, table_name, column_name))
+
+    def committed_products(self, lenprods, pair_name, status = Status.INFO):
+        print('[{}] Committed {} products at {}'.format(status.name, lenprods, pair_name))
+
+
 def good_table_name(name):
     final = ''
     for i in name:
