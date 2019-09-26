@@ -1,4 +1,4 @@
-import sqlite3
+
 from testing import WebScraper
 from ok import DbManager
 from utils import Logger, good_table_name

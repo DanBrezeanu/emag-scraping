@@ -114,11 +114,12 @@ class WebScraper:
 
     def all_prods_in_url(self, base_url):
         page = 1
+        f = open('links.txt', 'a')
 
         while True:
             products = []
             url = base_url + '/p{}/c'.format(page)
-
+            f.write(url+'\n')
             try:
                 request = requests.get(url)
                 if request.url != url and page != 1:
