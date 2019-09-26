@@ -1,64 +1,67 @@
-import sqlite3
+import psycopg2
 from utils import Logger
 import multiprocessing
-
 
 class DbManager:
     __instance = None
 
     def __init__(self):
         if DbManager.__instance is None:
-            DbManager.__instance = self
-            self.conn = sqlite3.connect('db.sqlite3')
-            self.create_table_prods_query = 'CREATE TABLE {} (link text, title text, oldprice real, newprice real, column_name text, category text)'
-            self.logger = Logger()
             self.lock = multiprocessing.Lock()
+            self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
+            # self.conn.autocommit = True
 
-            self.__init_progress()
+            self.create_table_prods_query = 'CREATE TABLE {} (link TEXT PRIMARY KEY NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT)'
+            self.logger = Logger()
+            DbManager.__instance = self
+            self.cursor = self.conn.cursor()
         else:
-            raise Exception('Multiple DbManger instances created')
+            raise RuntimeError('DbManager constructor called multiple times')
 
     @staticmethod
-    def getInstance():
+    def get_instance():
         if DbManager.__instance is None:
             DbManager()
 
         return DbManager.__instance
 
-    def __init_progress(self):
-        try:
-            self.conn.cursor().execute('CREATE TABLE progress (category text, page integer, products integer, done integer)')
-        except sqlite3.OperationalError as e:
-            self.logger.table_already_exists('progress', extra = 'Loading progress')
-            #TODO:
-
-    def commit_queries(self, *args):
-        while True:
-            try:
-                self.lock.acquire()
-                self.conn.commit()
-                self.lock.release()
-                break
-            except sqlite3.OperationalError as e:
-                self.lock.release()
-                self.logger.failed_to_commit(*args)
-
     def create_table(self, table_name):
-        try:
-            self.conn.cursor().execute(self.create_table_prods_query.format(table_name))
-            self.commit_queries('create_table', table_name)
-        except sqlite3.OperationalError as e:
-            self.logger.table_already_exists(table_name)
+        self.lock.acquire()
+        # try:
+        self.cursor.execute(self.create_table_prods_query.format(table_name))
 
-    def execute_query(self, query, cursor, *args, commit = False):
-        try:
-            cursor.execute(query)
-        except sqlite3.OperationalError as e:
-            self.logger.failed_to_execute(e)
-            return
+        # except Exception as e:
+        #     print('CANT CREATE TABLE {}'.format(table_name))
+        #
+        #     try:
+        #         self.cursor.close()
+        #         self.cursor = self.conn.cursor()
+        #     except:
+        #         self.conn.close()
+        #         self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
+        #
+        #     self.cursor = self.conn.cursor()
 
-        if commit:
-            self.commit_queries(*args)
+        self.conn.commit()
+        self.lock.release()
+
+    def execute_query(self, query, *args, commit = False):
+        self.lock.acquire()
+
+        try:
+            self.cursor.execute(query)
+        except Exception as e:
+            self.logger.failed_to_execute(e, query = query)
+            try:
+                self.cursor.close()
+                self.cursor = self.conn.cursor()
+            except:
+                self.conn.close()
+                self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
+            self.cursor = self.conn.cursor()
+
+        self.conn.commit()
+        self.lock.release()
 
     def check_progress(self):
         import datetime
@@ -84,7 +87,6 @@ class DbManager:
             print('{:>30}  {:>5}  {:>6}'.format('Total', '', 0))
 
         print('-' * 50)
-
-
-    def get_cursor(self):
-        return self.conn.cursor()
+    #
+    # def get_cursor(self):
+    #     return self.conn.cursor()
