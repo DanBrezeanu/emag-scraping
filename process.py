@@ -33,7 +33,7 @@ class Worker:
                 self.logger.committed_products(len(prods), pair[0])
 
                 for prod in prods:
-                    query = """INSERT INTO {} VALUES ('{}','{}', {}, {}, '{}', '{}')""".format(
+                    query = """INSERT INTO {} (link, title, oldprice, newprice, column_name, category) VALUES ('{}','{}', {}, {}, '{}', '{}')""".format(
                         self.tile_name,
                         prod.link,
                         prod.title.replace("'","''"),
@@ -57,10 +57,6 @@ class MainProcess:
 
     def __init_fill_db(self):
         depts = self.scraper.get_all_departments()
-
-
-        #         # [pair]                     col name           tile name
-        # jobs = [(depts[dept][column_name], column_name, good_table_name(dept)) for dept in depts for column_name in depts[dept]]
 
         workers = []
 

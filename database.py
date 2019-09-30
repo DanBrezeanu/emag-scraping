@@ -11,7 +11,7 @@ class DbManager:
             self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
             # self.conn.autocommit = True
 
-            self.create_table_prods_query = 'CREATE TABLE {} (link TEXT PRIMARY KEY NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT)'
+            self.create_table_prods_query = 'CREATE TABLE {} (id SERIAL PRIMARY KEY, link TEXT NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT)'
             self.logger = Logger()
             DbManager.__instance = self
             self.cursor = self.conn.cursor()

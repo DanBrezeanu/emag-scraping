@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import re
 import requests
 from utils import Logger
+import time
 
 class Product:
     def __init__(self, link, title, old_price, new_price, image):
@@ -115,6 +116,7 @@ class WebScraper:
     def all_prods_in_url(self, base_url):
         page = 1
         f = open('links.txt', 'a')
+        max_retries_200 = 20
 
         while True:
             products = []
@@ -136,4 +138,17 @@ class WebScraper:
                 _ = (yield page, products)
                 page += 1
             except IndexError as e:
+                if max_retries_200 == 0:
+                    raise StopIteration()
+                    break
+
+                if request.status_code == 200:
+                    max_retries_200 -= 1
+
+                if request.status_code == 511:
+                    print('Waiting. Starting reCaptha validator')
+                    for i in range(50):
+                        print('Waiting {} more seconds'.format(i))
+                        time.sleep(1)
+
                 self.logger.failed_to_load_products(url, request.status_code, e)
