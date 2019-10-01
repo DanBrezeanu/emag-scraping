@@ -113,15 +113,14 @@ class WebScraper:
 
         return oprice, nprice
 
-    def all_prods_in_url(self, base_url):
-        page = 1
-        f = open('links.txt', 'a')
+    def all_prods_in_url(self, base_url, start_page, start_no_products):
+        page = start_page + 1
         max_retries_200 = 20
-
+        products_to_be_ignored = start_no_products - start_page * 60
         while True:
             products = []
             url = base_url + '/p{}/c'.format(page)
-            f.write(url+'\n')
+
             try:
                 request = requests.get(url)
                 if request.url != url and page != 1:
@@ -130,6 +129,9 @@ class WebScraper:
 
                 items = self.__find_items(request.text)
                 for item in items:
+                    if products_to_be_ignored > 0:
+                        products_to_be_ignored -= 1
+                        continue
                     products.append(Product(self.__extract_link(item),
                                             self.__extract_title(item),
                                             *self.__extract_prices(item),

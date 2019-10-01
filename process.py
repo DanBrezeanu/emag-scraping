@@ -16,10 +16,14 @@ class Worker:
 
     def start_working(self):
         for pair in self.pairs:
+            done, pages, products = self.db.get_progress_for_pair(pair[0])
+            if done:
+                break
+
             pair_total_products = self.scraper.get_total_products(pair[1])
 
             n_prods = 0
-            coroutine = self.scraper.all_prods_in_url(pair[1])
+            coroutine = self.scraper.all_prods_in_url(pair[1], pages, products)
             self.db.execute_query(Query.init_progress_category.format(pair[0]))
 
             while True:
@@ -44,8 +48,8 @@ class Worker:
                     )
                     self.db.execute_query(query)
 
-                self.db.execute_query(Query.update_progress_table.format(page, n_prods, 0 if n_prods < pair_total_products else 1, pair[0]))
-
+                self.db.execute_query(Query.update_progress_table.format(page, n_prods, pair[0]))
+            self.db.execute_query(Query.update_progress_done_column.format(pair[0]))
 
 class MainProcess:
     def __init__(self, type):

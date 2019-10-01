@@ -5,8 +5,10 @@ import multiprocessing
 class Query:
     create_table_prods = 'CREATE TABLE IF NOT EXISTS {} (id SERIAL PRIMARY KEY, link TEXT NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT);'
     create_progress_table = 'CREATE TABLE IF NOT EXISTS progress (category TEXT PRIMARY KEY NOT NULL, pages INTEGER, products INTEGER, done INTEGER);'
-    update_progress_table = "UPDATE progress SET pages = {}, products = {}, done = {} WHERE category = '{}';"
+    update_progress_table = "UPDATE progress SET pages = {}, products = {} WHERE category = '{}';"
+    update_progress_done_column = "UPDATE progress SET done = 1 WHERE category = '{}';"
     init_progress_category = "INSERT INTO progress VALUES ('{}', 0, 0, 0)"
+    get_all_progress = "SELECT * FROM progress;"
 
 class DbManager:
     __instance = None
@@ -20,6 +22,8 @@ class DbManager:
 
             self.cursor = self.conn.cursor()
             self.execute_query(Query.create_progress_table)
+            self.execute_query(Query.get_all_progress)
+            self.all_progress = self.cursor.fetchall()
         else:
             raise RuntimeError('DbManager constructor called multiple times')
 
@@ -54,6 +58,14 @@ class DbManager:
 
         self.conn.commit()
         self.lock.release()
+
+    def get_progress_for_pair(self, pair_name):
+        if not any(pair_name in pair_progress for pair_progress in self.all_progress):
+            return False, 0, 0
+        else:
+            for pair_progress in self.all_progress:
+                if pair_progress[0] == pair_name:
+                    return pair_progress[-1], pair_progress[1], pair_progress[2]
 
     def check_progress(self):
         import datetime
