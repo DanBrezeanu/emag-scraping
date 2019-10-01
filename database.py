@@ -2,6 +2,12 @@ import psycopg2
 from utils import Logger
 import multiprocessing
 
+class Query:
+    create_table_prods = 'CREATE TABLE IF NOT EXISTS {} (id SERIAL PRIMARY KEY, link TEXT NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT);'
+    create_progress_table = 'CREATE TABLE IF NOT EXISTS progress (category TEXT PRIMARY KEY NOT NULL, pages INTEGER, products INTEGER, done INTEGER);'
+    update_progress_table = "UPDATE progress SET pages = {}, products = {}, done = {} WHERE category = '{}';"
+    init_progress_category = "INSERT INTO progress VALUES ('{}', 0, 0, 0)"
+
 class DbManager:
     __instance = None
 
@@ -9,12 +15,11 @@ class DbManager:
         if DbManager.__instance is None:
             self.lock = multiprocessing.Lock()
             self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
-            # self.conn.autocommit = True
-
-            self.create_table_prods_query = 'CREATE TABLE {} (id SERIAL PRIMARY KEY, link TEXT NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT)'
             self.logger = Logger()
             DbManager.__instance = self
+
             self.cursor = self.conn.cursor()
+            self.execute_query(Query.create_progress_table)
         else:
             raise RuntimeError('DbManager constructor called multiple times')
 
@@ -27,20 +32,7 @@ class DbManager:
 
     def create_table(self, table_name):
         self.lock.acquire()
-        # try:
-        self.cursor.execute(self.create_table_prods_query.format(table_name))
-
-        # except Exception as e:
-        #     print('CANT CREATE TABLE {}'.format(table_name))
-        #
-        #     try:
-        #         self.cursor.close()
-        #         self.cursor = self.conn.cursor()
-        #     except:
-        #         self.conn.close()
-        #         self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
-        #
-        #     self.cursor = self.conn.cursor()
+        self.cursor.execute(Query.create_table_prods.format(table_name))
 
         self.conn.commit()
         self.lock.release()

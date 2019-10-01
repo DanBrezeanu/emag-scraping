@@ -1,6 +1,5 @@
-
-from testing import WebScraper
-from ok import DbManager
+from webscraper import WebScraper
+from database import DbManager, Query
 from utils import Logger, good_table_name
 import multiprocessing
 import time
@@ -21,6 +20,7 @@ class Worker:
 
             n_prods = 0
             coroutine = self.scraper.all_prods_in_url(pair[1])
+            self.db.execute_query(Query.init_progress_category.format(pair[0]))
 
             while True:
                 try:
@@ -44,7 +44,8 @@ class Worker:
                     )
                     self.db.execute_query(query)
 
-                # self.db.commit_queries()
+                self.db.execute_query(Query.update_progress_table.format(page, n_prods, 0 if n_prods < pair_total_products else 1, pair[0]))
+
 
 class MainProcess:
     def __init__(self, type):
