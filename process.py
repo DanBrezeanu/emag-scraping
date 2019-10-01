@@ -18,7 +18,7 @@ class Worker:
         for pair in self.pairs:
             done, pages, products = self.db.get_progress_for_pair(pair[0])
             if done:
-                break
+                continue
 
             pair_total_products = self.scraper.get_total_products(pair[1])
 
@@ -34,10 +34,9 @@ class Worker:
 
                 n_prods += len(prods)
 
-                self.logger.committed_products(len(prods), pair[0])
 
                 for prod in prods:
-                    query = """INSERT INTO {} (link, title, oldprice, newprice, column_name, category) VALUES ('{}','{}', {}, {}, '{}', '{}')""".format(
+                    self.db.execute_query(Query.insert_products.format(
                         self.tile_name,
                         prod.link,
                         prod.title.replace("'","''"),
@@ -45,8 +44,10 @@ class Worker:
                         prod.new_price,
                         self.column_name,
                         pair[0]
-                    )
-                    self.db.execute_query(query)
+                    ))
+
+
+                self.logger.committed_products(len(prods), pair[0], page)
 
                 self.db.execute_query(Query.update_progress_table.format(page, n_prods, pair[0]))
             self.db.execute_query(Query.update_progress_done_column.format(pair[0]))
@@ -71,7 +72,7 @@ class MainProcess:
                 worker = Worker(good_table_name(tile), column, depts[tile][column])
 
                 proc = multiprocessing.Process(target = worker.start_working)
-                # self.logger.starting_worker(*job[:0:-1])
+                self.logger.starting_worker(tile, column)
 
                 workers.append((worker, proc))
                 proc.start()

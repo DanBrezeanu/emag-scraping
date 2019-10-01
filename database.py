@@ -9,6 +9,7 @@ class Query:
     update_progress_done_column = "UPDATE progress SET done = 1 WHERE category = '{}';"
     init_progress_category = "INSERT INTO progress VALUES ('{}', 0, 0, 0)"
     get_all_progress = "SELECT * FROM progress;"
+    insert_products = "INSERT INTO {} (link, title, oldprice, newprice, column_name, category) VALUES ('{}','{}', {}, {}, '{}', '{}')"
 
 class DbManager:
     __instance = None

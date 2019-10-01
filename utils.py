@@ -33,8 +33,8 @@ class Logger():
     def starting_worker(self, table_name, column_name, status = Status.INFO):
         print('[{}] Starting worker for {}, {}'.format(status.name, table_name, column_name))
 
-    def committed_products(self, lenprods, pair_name, status = Status.INFO):
-        print('[{}] Committed {} products at {}'.format(status.name, lenprods, pair_name))
+    def committed_products(self, lenprods, pair_name, page, status = Status.INFO):
+        print('[{}] Committed {} products from {}, page {}'.format(status.name, lenprods, pair_name, page))
 
 
 def good_table_name(name):
