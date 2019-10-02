@@ -116,6 +116,8 @@ class WebScraper:
     def all_prods_in_url(self, base_url, start_page, start_no_products):
         page = start_page + 1
         max_retries_200 = 20
+        max_retries_511 = 120
+
         products_to_be_ignored = start_no_products - start_page * 60
         while True:
             products = []
@@ -140,7 +142,7 @@ class WebScraper:
                 _ = (yield page, products)
                 page += 1
             except IndexError as e:
-                if max_retries_200 == 0:
+                if max_retries_200 == 0 or max_retries_511 == 0:
                     raise StopIteration()
                     break
 
@@ -148,9 +150,8 @@ class WebScraper:
                     max_retries_200 -= 1
 
                 if request.status_code == 511:
-                    print('Waiting. Starting reCaptha validator')
-                    for i in range(50):
-                        print('Waiting {} more seconds'.format(i))
-                        time.sleep(1)
+                    print('Waiting {} more seconds'.format(max_retries_511))
+                    time.sleep(1)
+                    max_retries_511 -= 1
 
                 self.logger.failed_to_load_products(url, request.status_code, e)

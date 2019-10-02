@@ -1,5 +1,6 @@
 import psycopg2
 from utils import Logger
+from settings import Settings
 import multiprocessing
 
 class Query:
@@ -17,7 +18,7 @@ class DbManager:
     def __init__(self):
         if DbManager.__instance is None:
             self.lock = multiprocessing.Lock()
-            self.conn = psycopg2.connect(host = '127.0.0.1', database = 'emag', user = 'danb', password = 'parola')
+            self.conn = psycopg2.connect(host = Settings.DATABASE_HOSTNAME, database = Settings.DATABASE_NAME, user = 'danb', password = 'parola')
             self.logger = Logger()
             DbManager.__instance = self
 
@@ -70,7 +71,7 @@ class DbManager:
 
     def check_progress(self):
         import datetime
-        c = self.conn.cursor()
+        self.cursor.execute('SELECT * FROM progress;')
 
         timenow = ''.join(str(datetime.datetime.now()).split('.')[0])
         print('-' * 50)
@@ -78,7 +79,7 @@ class DbManager:
         print('-' * 50)
 
         try:
-            results = c.execute('SELECT * FROM progress').fetchall()
+            results = self.cursor.fetchall()
             for result in results:
                 print('{:>30}  {:>5}  {:>6} {}'.format(result[0], result[1], result[2], 'DONE' if result[3] == 1 else 'IN PROGRESS'))
         except:
@@ -86,12 +87,10 @@ class DbManager:
         print('-' * 50)
 
         try:
-            results = c.execute('SELECT SUM(products) FROM progress').fetchall()[0]
+            self.cursor.execute('SELECT SUM(products) FROM progress;')
+            results = self.cursor.fetchall()[0]
             print('{:>30}  {:>5}  {:>6}'.format('Total', ' ', results[0]))
         except:
             print('{:>30}  {:>5}  {:>6}'.format('Total', '', 0))
 
         print('-' * 50)
-    #
-    # def get_cursor(self):
-    #     return self.conn.cursor()
