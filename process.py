@@ -1,5 +1,6 @@
 from webscraper import WebScraper
 from database import DbManager, Query
+from settings import Settings
 from utils import Logger, good_table_name
 import multiprocessing
 import time
@@ -16,6 +17,9 @@ class Worker:
 
     def start_working(self):
         for pair in self.pairs:
+            if pair[0] in Settings.BANNED_PAIRS:
+                continue
+                
             done, pages, products = self.db.get_progress_for_pair(pair[0])
             if done:
                 continue
@@ -67,8 +71,13 @@ class MainProcess:
         workers = []
 
         for tile in depts:
+            if tile in Settings.BANNED_TILES:
+                continue
             self.db.create_table(good_table_name(tile))
             for column in depts[tile]:
+                if column in Settings.BANNED_COLUMNS:
+                    continue
+
                 worker = Worker(good_table_name(tile), column, depts[tile][column])
 
                 proc = multiprocessing.Process(target = worker.start_working)

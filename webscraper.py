@@ -44,7 +44,7 @@ class WebScraper:
                 for elem in elems:
                     anchor = elem.findAll('a')[0]
                     name = anchor.findAll('h5')[0].contents[0].strip()
-                    url = root_url + '/'.join(anchor['href'].strip().split('/')[:-1]) + '/sort-priceasc'
+                    url = root_url + '/'.join(anchor['href'].strip().split('/')[:-1]) + '/sort-pricedesc'
                     prods[tile_name][col_name].append((name, url))
         return prods
 
@@ -98,8 +98,12 @@ class WebScraper:
         return link
 
     def __extract_prices(self, item):
-        price_card = item.findAll('div', {'class': 'card-section-btm'})[0]\
-                         .findAll('div', {'class': 'card-body'})[1]
+        price_card = item.findAll('div', {'class': 'card-section-btm'})[0]
+
+        try:
+            price_card = price_card.findAll('div', {'class': 'card-body'})[1]
+        except:
+            price_card = price_card.findAll('div', {'class': 'card-body'})[0]
 
         oprice = None
         try:
@@ -115,8 +119,9 @@ class WebScraper:
 
     def all_prods_in_url(self, base_url, start_page, start_no_products):
         page = start_page + 1
-        max_retries_200 = 20
+        max_retries_200 = 1
         max_retries_511 = 120
+        finished_items = False
 
         products_to_be_ignored = start_no_products - start_page * 60
         while True:
@@ -125,7 +130,7 @@ class WebScraper:
 
             try:
                 request = requests.get(url)
-                if request.url != url and page != 1:
+                if (request.url != url and page != 1) or finished_items:
                     self.logger.finished_products(url)
                     break
 
@@ -134,6 +139,12 @@ class WebScraper:
                     if products_to_be_ignored > 0:
                         products_to_be_ignored -= 1
                         continue
+                    prices = self.__extract_prices(item)
+                    if (prices[0] is not None and prices[0] < 150.0) or (prices[0] is None and prices[1] < 150):
+                        finished_items = True
+                        print('finished items: {}'.format(prices))
+                        break
+
                     products.append(Product(self.__extract_link(item),
                                             self.__extract_title(item),
                                             *self.__extract_prices(item),
