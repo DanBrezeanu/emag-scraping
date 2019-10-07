@@ -2,6 +2,9 @@ from webscraper import WebScraper
 from database import DbManager, Query
 from settings import Settings
 from utils import Logger, good_table_name
+
+if __name__ == '__main__':
+    from scheduler import Scheduler
 import multiprocessing
 import time
 
@@ -19,7 +22,7 @@ class Worker:
         for pair in self.pairs:
             if pair[0] in Settings.BANNED_PAIRS:
                 continue
-                
+
             done, pages, products = self.db.get_progress_for_pair(pair[0])
             if done:
                 continue
@@ -66,34 +69,7 @@ class MainProcess:
             self.__init_fill_db()
 
     def __init_fill_db(self):
-        depts = self.scraper.get_all_departments()
-
-        workers = []
-
-        for tile in depts:
-            if tile in Settings.BANNED_TILES:
-                continue
-            self.db.create_table(good_table_name(tile))
-            for column in depts[tile]:
-                if column in Settings.BANNED_COLUMNS:
-                    continue
-
-                worker = Worker(good_table_name(tile), column, depts[tile][column])
-
-                proc = multiprocessing.Process(target = worker.start_working)
-                self.logger.starting_worker(tile, column)
-
-                workers.append((worker, proc))
-                proc.start()
-                time.sleep(5)
-
-                while len(workers) >= 4:
-                    for w, p in workers:
-                        p.join(timeout = 0)
-                        if not p.is_alive():
-                            workers.remove((w, p))
-                            break
-
+        Scheduler()
 
 if __name__ == '__main__':
     MainProcess('fill_database')

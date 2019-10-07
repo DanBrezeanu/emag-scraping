@@ -5,10 +5,11 @@ import multiprocessing
 
 class Query:
     create_table_prods = 'CREATE TABLE IF NOT EXISTS {} (id SERIAL PRIMARY KEY, link TEXT NOT NULL, title TEXT, oldprice REAL, newprice REAL, column_name TEXT, category TEXT);'
-    create_progress_table = 'CREATE TABLE IF NOT EXISTS progress (category TEXT PRIMARY KEY NOT NULL, pages INTEGER, products INTEGER, done INTEGER);'
+    create_progress_table = 'CREATE TABLE IF NOT EXISTS progress (category TEXT PRIMARY KEY NOT NULL, pages INTEGER, products INTEGER, locked INTEGER, done INTEGER);'
     update_progress_table = "UPDATE progress SET pages = {}, products = {} WHERE category = '{}';"
     update_progress_done_column = "UPDATE progress SET done = 1 WHERE category = '{}';"
-    init_progress_category = "INSERT INTO progress VALUES ('{}', 0, 0, 0)"
+    # update_progress_done_column = "UPDATE progress SET locked = {} WHERE category = '{}';"
+    init_progress_category = "INSERT INTO progress VALUES ('{}', 0, 0, 0, 0)"
     get_all_progress = "SELECT * FROM progress;"
     insert_products = "INSERT INTO {} (link, title, oldprice, newprice, column_name, category) VALUES ('{}','{}', {}, {}, '{}', '{}')"
 
