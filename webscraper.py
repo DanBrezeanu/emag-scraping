@@ -65,6 +65,8 @@ class WebScraper:
                 return total
             except IndexError:
                 self.logger.failed_total_number_products(url.split('/')[-2])
+                #fucks up here
+                #remove while, raise exception, catch it on the other side, uncount iterator for 200 
 
     def __find_items(self, response):
         soup = BeautifulSoup(response, 'html.parser')
@@ -155,14 +157,16 @@ class WebScraper:
             except IndexError as e:
                 if max_retries_200 == 0 or max_retries_511 == 0:
                     raise StopIteration()
+                    exit(1)
                     break
 
                 if request.status_code == 200:
                     max_retries_200 -= 1
 
                 if request.status_code == 511:
-                    print('Waiting {} more seconds'.format(max_retries_511))
-                    time.sleep(1)
-                    max_retries_511 -= 1
+                    while max_retries_511 > 0:
+                        print('Waiting {} more seconds'.format(max_retries_511))
+                        time.sleep(1)
+                        max_retries_511 -= 1
 
                 self.logger.failed_to_load_products(url, request.status_code, e)
